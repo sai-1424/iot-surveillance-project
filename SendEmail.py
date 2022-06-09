@@ -25,7 +25,7 @@ def send_email(s,r,sub,m,f):
     <html>
     <head></head>
     <body>
-    <h1>Hello I'm Alexa Bot!</h1>
+    <h1>Hello I'm IoT Bot!</h1>
     <p>Please see the attached file.</p>
     </body>
     </html>"""

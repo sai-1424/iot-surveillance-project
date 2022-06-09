@@ -1,7 +1,8 @@
 import cv2
 import numpy as np
 import os
-from utils import process_frame, draw_prediction
+from utils import process_frame1, draw_prediction
+
 
 
 # Define constants
@@ -17,7 +18,7 @@ with open('coco.names', 'rt') as f:
     classes = f.read().rstrip('\n').split('\n')
 
 # Load the network with YOLOv3 weights and config using darknet framework
-net = cv2.dnn.readNet("../../yolov3.weights", "yolov3.cfg", "darknet")
+net = cv2.dnn.readNet("yolov3.weights", "yolov3.cfg", "darknet")
 
 # Get the output layer names used for forward pass
 outNames = net.getUnconnectedOutLayersNames()
@@ -43,7 +44,7 @@ while(cap.isOpened()):
     outs = net.forward(outNames)
 
     # Process output and draw predictions
-    process_frame(frame, outs, classes, CONF_THRESHOLD, NMS_THRESHOLD)
+    process_frame1(frame) #, outs, classes, CONF_THRESHOLD, NMS_THRESHOLD)
 
     # Save video
     if writer is None:
@@ -52,7 +53,7 @@ while(cap.isOpened()):
         writer = cv2.VideoWriter('out.avi', cv2.VideoWriter_fourcc('M','J','P','G'), 10, (frameWidth, frameHeight))
     cv2.imshow('output',frame)
     writer.write(frame)
-    cv2.waitKey(1)
+    cv2.waitKey(3)
     
 
 # cleaning up

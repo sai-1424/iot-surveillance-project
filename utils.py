@@ -6,14 +6,20 @@ from SendEmail import *
 import os
 import time
 texts=[]
+import json
+
+accessKeyr=''
+secretAccessKeyr=''
 
 ser=serial.Serial('COM3',9600,timeout=0.5)
 ser.close()
 ser.open()
+pFlag1=0
+pFlag2=0
 
 # Draw a prediction box with confidence and title
 def draw_prediction(frame, classes, classId, conf, left, top, right, bottom):
-    global texts
+    global texts, pFlag1,pFlag2
 
     # Draw a bounding box.
     cv2.rectangle(frame, (left, top), (right, bottom), (0, 255, 0))
@@ -33,10 +39,19 @@ def draw_prediction(frame, classes, classId, conf, left, top, right, bottom):
     texts.append(classes[classId])
     cv2.imwrite('test.jpg',frame)
 
-    if(classes[classId]=='Person'):
-        send_email('otp.service@makeskilled.com','kolisettysai26@gmail.com','Person Identified', 'Hi Hello, Your Bot Here','test.jpg')
-        ser.write('person'.encode('utf-8'))
+    if(classes[classId]=='person'):
+        pFlag1+=1
+        pFlag2=0
     else:
+        pFlag2+=1
+        pFlag1=0
+    print(pFlag1,pFlag2)
+    if pFlag1==1:
+        send_email('otp.service@makeskilled.com','kolisettysai26@gmail.com','Person Identified', 'Hi Hello, Your Bot Here','test.jpg')
+        print('Sending Person')
+        ser.write('person'.encode('utf-8'))
+    if pFlag2==1:
+        print('Sending noperson')
         ser.write('noperson'.encode('utf-8'))
 
 # Process frame, eliminating boxes with low confidence scores and applying non-max suppression
@@ -80,3 +95,20 @@ def process_frame(frame, outs, classes, confThreshold, nmsThreshold):
         height = box[3]
         texts.append(classes[classId])
         draw_prediction(frame, classes, classIds[i], confidences[i], left, top, left + width, top + height)
+    else:
+        print('Sending noperson')
+        ser.write('noperson'.encode('utf-8'))
+
+def process_frame1(frame):
+    cv2.imwrite('test.jpg',frame)
+    imageSource=open("test.jpg",'rb')
+    client=boto3.client('rekognition',aws_access_key_id=accessKeyr,aws_secret_access_key=secretAccessKeyr,region_name=region)
+    response=client.detect_labels(Image={'Bytes':imageSource.read()},MaxLabels=1)
+    # response=json.loads(response)
+    label=(response['Labels'][0]['Name'])
+    print(label)
+    if(label=='Person'):
+        send_email('otp.service@makeskilled.com','kolisettysai26@gmail.com','Person Identified', 'Hi Hello, Your Bot Here','test.jpg')
+        ser.write('person'.encode('utf-8'))
+    else:
+        ser.write('noperson'.encode('utf-8'))
